@@ -9,7 +9,6 @@ sys_read equ 0
 sys_write equ 1
 sys_open equ 2
 sys_close equ 3
-sys_lseek equ 8
 
 page_size equ 4096
 
