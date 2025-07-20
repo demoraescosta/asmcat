@@ -27,6 +27,12 @@ start:
     pop rdi
     pop rdi ; first argument at the top of the stack
 
+    ; check if is argument
+    mov al, [rdi+0]
+    mov ah, '-'
+    cmp al, ah
+    je parse_args
+
     jmp open
 
 parse_args:
@@ -39,12 +45,6 @@ parse_args:
     jmp read_stdout
     
 open: ; attempt to open file from rsi
-    ; check if is argument
-    mov al, [rdi+0]
-    mov ah, '-'
-    cmp al, ah
-    je parse_args
-
     mov rax, sys_open
     ; rsi has pointer to the filename
     mov rsi, 0 ; readonly
@@ -58,16 +58,17 @@ open: ; attempt to open file from rsi
 
 ; call open and read continuosly until it exausts all arguments
 main_loop:
+    call read
     mov rax, [num_args]
     dec rax
     mov [num_args], rax
-    call read
     pop rdi
-   
+
     mov rax, [num_args]
     cmp rax, 0
-    je main_loop
-    jne open
+    je exit
+
+    jmp open
 
 read:
     mov rax, sys_read
@@ -87,40 +88,10 @@ read:
     syscall 
 
     cmp rax, rdx ; check if could write whole chunck
-    jne exit
+    je .return
 
     jmp read
 
-cleanup:
-    mov rax, sys_close
-    mov rdi, [filedesc]
-    syscall
-
-    ret
-
-exit:
-    call cleanup
-    xor rdi, rdi
-    mov rax, sys_exit
-    syscall
-
-error_insufficient_args:
-    mov rax, sys_write
-    mov rdi, sys_stderr
-    mov rsi, error_insufficient_args_msg
-    mov rdx, error_insufficient_args_msg_sz
-    mov rax, sys_write 
-
-    syscall
-
-    mov rdi, 1
-    mov rax, sys_exit
-    syscall
-
-=======
-    jmp .return
-
-    jmp read
 .return:
     ret
 
@@ -151,7 +122,19 @@ print_help:
     syscall
 
     call exit
->>>>>>> cf03e10 (new functionality for asmcat)
+
+exit:
+    call close_file
+    xor rdi, rdi
+    mov rax, sys_exit
+    syscall
+
+close_file:
+    mov rax, sys_close
+    mov rdi, [filedesc]
+    syscall
+
+    ret
 
 error_file_not_found:
     mov rax, sys_write
@@ -178,38 +161,6 @@ error_failed_to_read_file:
     mov rdi, 1
     mov rax, sys_exit
     syscall
-
-segment readable writeable
-
-    filedesc dq 0 
-
-    buffer_sz dq page_size
-    buffer rb buffer_sz
-
-    error_insufficient_args_msg db "Usage: asmcat <FILENAME>", 0xA
-    error_insufficient_args_msg_sz = $-error_insufficient_args_msg
-
-    error_file_not_found_msg db "ERROR: Failed to open file", 0xA
-    error_file_not_found_msg_sz = $-error_file_not_found_msg
-
-    error_file_couldnt_be_read_msg db "ERROR: File could not be read", 0xA
-    error_file_couldnt_be_read_msg_sz = $-error_file_not_found_msg
-
-=======
-    call exit
-
-exit:
-    call cleanup
-    xor rdi, rdi
-    mov rax, sys_exit
-    syscall
-
-cleanup:
-    mov rax, sys_close
-    mov rdi, [filedesc]
-    syscall
-
-    ret
 
 segment readable writeable
     filedesc dq 0 
@@ -242,5 +193,4 @@ segment readable writeable
              db ' -h   --help        display this help and exit', 0xA
              ; db '      --version     output version information and exit', 0xA, 0xA
     help_msg_sz = $-help_msg
->>>>>>> cf03e10 (new functionality for asmcat)
 
