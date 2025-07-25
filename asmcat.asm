@@ -41,7 +41,7 @@ parse_args:
     mov ah, 'u'
     cmp al, ah
     pop rdi
-    jmp open
+    je open
 
     mov ah, 'h'
     cmp al, ah
@@ -175,6 +175,8 @@ segment readable writeable
 
     num_args dq 0
 
+    show_nums db 0
+
     error_file_not_found_msg db "asmcat: No such file or directory", 0xA
     error_file_not_found_msg_sz = $-error_file_not_found_msg
 
@@ -189,13 +191,13 @@ segment readable writeable
              ; db '  -b, --number-nonblank    number nonempty output lines, overrides -n', 0xA
              ; db '  -e                       equivalent to -vE', 0xA
              ; db '  -E, --show-ends          display $ at end of each line', 0xA
-             ; db '  -n, --number             number all output lines', 0xA
+             db ' -n    number all output lines', 0xA
              ; db '  -s, --squeeze-blank      suppress repeated empty output lines', 0xA
              ; db '  -t                       equivalent to -vT', 0xA
              ; db '  -T, --show-tabs          display TAB characters as ^I', 0xA
-             db '  -u                       (ignored)', 0xA
+             db ' -u    (ignored)', 0xA
              ; db '  -v, --show-nonprinting   use ^ and M- notation, except for LFD and TAB', 0xA
-             db ' -h   --help        display this help and exit', 0xA
+             db ' -h    display this help and exit', 0xA
              ; db '      --version     output version information and exit', 0xA, 0xA
     help_msg_sz = $-help_msg
 
