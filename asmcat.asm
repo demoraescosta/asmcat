@@ -38,6 +38,11 @@ start:
 parse_args:
     mov al, [rdi+1]
 
+    mov ah, 'u'
+    cmp al, ah
+    pop rdi
+    jmp open
+
     mov ah, 'h'
     cmp al, ah
     je print_help
